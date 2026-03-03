@@ -121,7 +121,17 @@ setup_cert() {
         error "自签证书生成失败！"
         return 1
     fi
-    chmod 600 "${CERT_DIR}/private.key"
+    # 授予 hysteria 服务用户读取权限
+    chmod 644 "${CERT_DIR}/cert.crt"
+    chmod 640 "${CERT_DIR}/private.key"
+    chown -R root:root "${CERT_DIR}"
+    chmod 755 "${CERT_DIR}"
+    # hysteria-server 默认以 nobody 用户运行，需要可读
+    if id "hysteria" &>/dev/null; then
+        chown root:hysteria "${CERT_DIR}/private.key"
+    else
+        chmod 644 "${CERT_DIR}/private.key"
+    fi
     CERT_MODE="self"
     CERT_KEY="${CERT_DIR}/private.key"
     CERT_CRT="${CERT_DIR}/cert.crt"
